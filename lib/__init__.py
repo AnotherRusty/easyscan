@@ -1,4 +1,4 @@
-from .lidar import Lidar
-from .display import Display
+from application import Application
 
-__all__ = ['Lidar', 'Display']
+
+__all__ = ['Application']
