@@ -32,11 +32,11 @@ class Application:
 
         # variables
         self.port = StringVar()
-        self.port.set('/dev/ttyUSB0')
+        self.port.set('COM3')
         self.ignore_min = IntVar()
-        self.ignore_min.set(150)
+        self.ignore_min.set(0)
         self.ignore_max = IntVar()
-        self.ignore_max.set(210)
+        self.ignore_max.set(0)
         self.scale = DoubleVar()
         self.scale.set(1.0)
         self.connect_button_text = StringVar()
@@ -79,7 +79,7 @@ class Application:
         Button(self.setting_container, textvariable=self.start_button_text, width=15, height=2, command=self.start_reg).grid(row=5, column=1, pady=10, sticky=E)
         Button(self.setting_container, textvariable=self.export_button_text, width=15, height=2, command=self.export_reg).grid(row=5, column=2, pady=10, sticky=E)
 
-        self.setting_container.grid(pady=15)
+        self.setting_container.grid(pady=10)
 
     # display
         self.display_container = Frame(self.root)
@@ -104,7 +104,7 @@ class Application:
                 self.scanner = Scanner(self.port.get())
             except:
                 self.scanner = None
-                self.show_status('连接失败')
+                self.show_status('连接失败,请检查端口号')
                 return
 
             self.show_status('正在连接...')
@@ -120,7 +120,7 @@ class Application:
                     return
             except:
                 pass
-            self.show_status('设备异常')
+            self.show_status('连接失败，请重新连接')
         else:
             self.connect_flag = False
             self.connect_button_text.set('连接')
@@ -177,12 +177,12 @@ class Application:
             if scan[i] == 0.0:
                 continue
             d = scan[i]
-            th = i / 180.0 * pi
+            th = (360-i) / 180.0 * pi
             x = d * cos(th)
             y = d * sin(th)
             resolution = RESOLUTION / self.scale.get()
             posx = int(DISPLAY_W/2.0 + (x / resolution))
-            posy = int(DISPLAY_H/2.0 + (y / resolution))
+            posy = int(DISPLAY_H/2.0 - (y / resolution))
             if posx >= 0 and posx < DISPLAY_W and posy >= 0 and posy < DISPLAY_H:
                 mat[posy][posx] = '#ffff00'
         return mat
@@ -209,8 +209,7 @@ class Application:
             if cad_scan[i] == 0.0:
                 continue
             d = cad_scan[i]
-            print(d)
-            th = i / 180 * pi
+            th = (360-i) / 180 * pi
             x = d * 1000 * cos(th)
             y = d * 1000 * sin(th)
             cad_points.append((x,y))
