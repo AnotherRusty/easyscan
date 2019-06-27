@@ -1,10 +1,10 @@
 #coding=utf-8
 
 from tkinter import *
-import tkFileDialog
+from tkinter import filedialog
 from .scanner import Scanner
 import threading
-from time import sleep
+from time import sleep, time
 from math import pi, cos, sin
 import sdxf
 
@@ -12,9 +12,12 @@ import sdxf
 WINDOW_W = 600
 WINDOW_H = 600
 
+# display params
 DISPLAY_W = 600
 DISPLAY_H = 400
+FPS = 10
 
+# scan params
 SCAN_LEN = 360
 RESOLUTION = 0.05
 SCALE_MIN = 1.0
@@ -50,8 +53,6 @@ class Application:
 
         # objects
         self.scanner = None
-        self.cad_points = [None for i in range(SCAN_LEN)]
-        self.scan = []
 
         # threads
         self.display_thread = threading.Thread(name='display', target=self.display_func)
@@ -139,13 +140,17 @@ class Application:
             self.start_button_text.set('开始扫描')
     
     def export_reg(self):
-        filename = tkFileDialog.asksaveasfilename()
+        filename = filedialog.asksaveasfilename()
+        if not filename:
+            return
         self.show_status('生在生成dxf文件...')
         dxf = sdxf.Drawing()
-        dxf.append(sdxf.Line(points=self.cad_points))
+        dxf.append(sdxf.LineList(points=self.process_scan_for_cad(), closed=1, layer='drawinglayer'))
         self.show_status('保存中...')
-        dxf.saveas(filename+'.dxf')
-        self.show_status('已保存至'+filename+'.dxf')
+        if '.dxf' not in filename:
+            filename += '.dxf'
+        dxf.saveas(filename)
+        self.show_status('已保存至'+filename)
 
     def display_func(self):
         center_x = int(DISPLAY_W / 2)
@@ -154,13 +159,17 @@ class Application:
         img = PhotoImage(width=DISPLAY_W, height=DISPLAY_H)
         self.canvas.create_image(center_x, center_y, image=img, state='normal')
 
+        interval = 1.0/FPS
+        last = time()
         while self.start_flag:
-            scan = self.scanner.get_scan()
-            if len(scan) != SCAN_LEN:
-                self.show_status('扫描数据异常')
-                break
-            color_mat = self.calc_color_mat(scan)
-            img.put(''.join("{" + (" ".join(str(color) for color in row)) + "} " for row in color_mat), (0, 0))
+            if time()-last > interval:
+                scan = self.scanner.get_scan()
+                if len(scan) != SCAN_LEN:
+                    self.show_status('扫描数据异常')
+                    break
+                color_mat = self.calc_color_mat(scan)
+                img.put(''.join("{" + (" ".join(str(color) for color in row)) + "} " for row in color_mat), (0, 0))
+                last = time()
 
     def calc_color_mat(self, scan):
         mat = [["#000000" for x in range(0, DISPLAY_W)] for y in range(DISPLAY_H)]
@@ -177,6 +186,35 @@ class Application:
             if posx >= 0 and posx < DISPLAY_W and posy >= 0 and posy < DISPLAY_H:
                 mat[posy][posx] = '#ffff00'
         return mat
+    
+    def process_scan_for_cad(self):
+        scan_list = []
+        cad_scan = [0.0 for i in range(SCAN_LEN)]
+        num_scan = 20
+        for i in range(num_scan):
+            scan_list.append(self.scanner.get_scan())
+        for i in range(SCAN_LEN):
+            d = 0.0
+            n = 0
+            for scan in scan_list:
+                if scan[i] == 0.0:
+                    continue
+                d += scan[i]
+                n += 1
+            if n > 0:
+                cad_scan[i] = d / n
+        # transform to x,y coordinate
+        cad_points = []
+        for i in range(SCAN_LEN):
+            if cad_scan[i] == 0.0:
+                continue
+            d = cad_scan[i]
+            print(d)
+            th = i / 180 * pi
+            x = d * 1000 * cos(th)
+            y = d * 1000 * sin(th)
+            cad_points.append((x,y))
+        return cad_points
 
     def show_status(self, ss):
         self.status.set(ss)

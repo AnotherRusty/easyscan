@@ -25,6 +25,7 @@ class Scanner(threading.Thread):
         return self.scan
     
     def run(self):
+        self.lidar.clear_input()
         while True:
             for meas in self.lidar.iter_measurments():
                 new_scan    = meas[0]
