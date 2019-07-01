@@ -21,7 +21,7 @@ FPS = 10
 SCAN_LEN = 360
 RESOLUTION = 0.05
 SCALE_MIN = 1.0
-SCALE_MAX = 3.0
+SCALE_MAX = 10.0
 
 class Application:
     def __init__(self, master=Tk()):
@@ -176,8 +176,8 @@ class Application:
         for i in range(SCAN_LEN):
             if scan[i] == 0.0:
                 continue
-            d = scan[i]
-            th = (360-i) / 180.0 * pi
+            d = scan[i][1]
+            th = (360-scan[i][0]) / 180.0 * pi
             x = d * cos(th)
             y = d * sin(th)
             resolution = RESOLUTION / self.scale.get()
