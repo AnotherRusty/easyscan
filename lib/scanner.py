@@ -35,3 +35,4 @@ class Scanner(threading.Thread):
                 if angle <  360:
                     self.scan[int(angle)] = (angle, distance / 1000.0)
     
+
