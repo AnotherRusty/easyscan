@@ -12,7 +12,7 @@ class Scanner(threading.Thread):
         self.lidar.start_motor()
         
         self.setDaemon(True)
-        self.scan = [0.0 for i in range(360)]
+        self.scan = [(0.0,0.0) for i in range(360)]
 
     def check_device(self):
         info = self.lidar.get_info()

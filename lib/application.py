@@ -32,7 +32,7 @@ class Application:
 
         # variables
         self.port = StringVar()
-        self.port.set('COM3')
+        self.port.set('/dev/ttyUSB0')
         self.ignore_min = IntVar()
         self.ignore_min.set(0)
         self.ignore_max = IntVar()
@@ -145,7 +145,14 @@ class Application:
             return
         self.show_status('生在生成dxf文件...')
         dxf = sdxf.Drawing()
-        dxf.append(sdxf.LineList(points=self.process_scan_for_cad(), closed=1, layer='drawinglayer'))
+        
+        # record point list
+        point_list = self.process_scan_for_cad()
+        with open(filename+'.txt', 'w') as f:
+            f.write(str(point_list))
+            f.close()
+
+        dxf.append(sdxf.LineList(points=point_list, closed=1, layer='drawinglayer'))
         self.show_status('保存中...')
         if '.dxf' not in filename:
             filename += '.dxf'
@@ -197,9 +204,9 @@ class Application:
             d = 0.0
             n = 0
             for scan in scan_list:
-                if scan[i] == 0.0:
+                if scan[i][1] == 0.0:
                     continue
-                d += scan[i]
+                d += scan[i][1]
                 n += 1
             if n > 0:
                 cad_scan[i] = d / n
