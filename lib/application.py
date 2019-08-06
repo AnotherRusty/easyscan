@@ -195,8 +195,7 @@ class Application:
         return mat
     
     def process_scan_for_cad(self):
-        scan_list = []
-        cad_scan = [0.0 for i in range(SCAN_LEN)]
+        cad_scan = []
         num_scan = 20
         for i in range(num_scan):
             scan_list.append(self.scanner.get_scan())
@@ -212,11 +211,11 @@ class Application:
                 cad_scan[i] = d / n
         # transform to x,y coordinate
         cad_points = []
-        for i in range(SCAN_LEN):
-            if cad_scan[i] == 0.0:
+        for meas in cad_scan:
+            if meas[1] == 0.0:
                 continue
-            d = cad_scan[i]
-            th = (360-i) / 180 * pi
+            d = meas[1]
+            th = (360-meas[0]) / 180.0 * pi
             x = d * 1000 * cos(th)
             y = d * 1000 * sin(th)
             cad_points.append((x,y))
