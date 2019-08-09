@@ -23,6 +23,10 @@ RESOLUTION = 0.05
 SCALE_MIN = 1.0
 SCALE_MAX = 10.0
 
+# default
+DEFAULT_PORT = 'COM3'
+
+
 class Application:
     def __init__(self, master=Tk()):
         self.root = master
@@ -32,7 +36,7 @@ class Application:
 
         # variables
         self.port = StringVar()
-        self.port.set('/dev/ttyUSB0')
+        self.port.set(DEFAULT_PORT)
         self.ignore_min = IntVar()
         self.ignore_min.set(0)
         self.ignore_max = IntVar()
@@ -197,27 +201,42 @@ class Application:
     def process_scan_for_cad(self):
         cad_scan = []
         num_scan = 20
+        # for i in range(num_scan):
+        #     scan_list.append(self.scanner.get_scan())
+        # for i in range(SCAN_LEN):
+        #     d = 0.0
+        #     n = 0
+        #     for scan in scan_list:
+        #         if scan[i][1] == 0.0:
+        #             continue
+        #         d += scan[i][1]
+        #         n += 1
+        #     if n > 0:
+        #         cad_scan[i] = d / n
+        # # transform to x,y coordinate
+        # cad_points = []
+        # for meas in cad_scan:
+        #     if meas[1] == 0.0:
+        #         continue
+        #     d = meas[1]
+        #     th = (360-meas[0]) / 180.0 * pi
+        #     x = d * 1000 * cos(th)
+        #     y = d * 1000 * sin(th)
+        #     cad_points.append((x,y))
         for i in range(num_scan):
-            scan_list.append(self.scanner.get_scan())
-        for i in range(SCAN_LEN):
-            d = 0.0
-            n = 0
-            for scan in scan_list:
-                if scan[i][1] == 0.0:
-                    continue
-                d += scan[i][1]
-                n += 1
-            if n > 0:
-                cad_scan[i] = d / n
-        # transform to x,y coordinate
+            scan = self.scanner.get_scan()
+            for meas in scan:
+                cad_scan.append(meas)
+        cad_scan.sort(key = lambda x:x[0])
+        
         cad_points = []
         for meas in cad_scan:
             if meas[1] == 0.0:
                 continue
             d = meas[1]
             th = (360-meas[0]) / 180.0 * pi
-            x = d * 1000 * cos(th)
-            y = d * 1000 * sin(th)
+            x = d * 1000.0 * cos(th)
+            y = d * 1000.0 * sin(th)
             cad_points.append((x,y))
         return cad_points
 
